@@ -1,17 +1,39 @@
 const bcrypt = require('bcrypt');
-const registerController = (req, res) => {
-    const { firstName, dob, phoneNumber, email, salesforceId, password } = req.body;
+const User = require('../models/User');
+const registerController = async(req, res) => {
+  const { firstName, dob, phoneNumber, email, salesforceId, password } = req.body;
   
-    // Generate a salt and hash the password
-    bcrypt.genSalt(10, (err, salt) => {
-      bcrypt.hash(password, salt, (err, hash) => {
-        // Store the user details and hashed password in the database
-        // Replace this with your own code to save the user details
-  
-        // Redirect to the login page after successful registration
-        res.redirect('/login');
-      });
+  try {
+    // Check if the user already exists
+    let user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+    
+    // Create a new user
+    const newUser = new User({
+      firstName,
+      dob,
+      phoneNumber,
+      email,
+      salesforceId,
+      password,
     });
+
+    // Hash the password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newUser.password, salt);
+    newUser.password = hashedPassword;
+
+    // Save the user to the database
+    await newUser.save();
+    res.status(200).json({ message: 'Registration successful' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+
+
   };
   
   module.exports = registerController;

@@ -64,6 +64,7 @@
 
 
 const express = require('express');
+const mongoose = require('mongoose');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const passport = require('passport');
@@ -82,6 +83,14 @@ app.use(session({
   resave: false,
   saveUninitialized: false
 }));
+
+// Database connection
+mongoose.connect(config.mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error(err));
 
 // Passport serialization and deserialization functions
 passport.serializeUser((user, done) => {
